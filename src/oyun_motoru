@@ -1,0 +1,49 @@
+public class OyunNesnesi {
+    public enum Tip { OYUNCU, DUSMAN, ESYA }
+
+    public String nesneAdi;
+    public Tip nesneTipi;
+    public int canDegeri;
+    public int yatayKonum;
+    public int dikeyKonum;
+    public int guc;
+
+    public OyunNesnesi(String ad, Tip tip, int can, int x, int y, int kuvvet) {
+        this.nesneAdi = ad;
+        this.nesneTipi = tip;
+        this.canDegeri = can;
+        this.yatayKonum = x;
+        this.dikeyKonum = y;
+        this.guc = kuvvet;
+    }
+
+    public void hareketEt(String yon, int miktar) {
+        if (nesneTipi == Tip.OYUNCU) {
+            if (yon.equals("ileri")) {
+                dikeyKonum += miktar;
+            } else if (yon.equals("sag")) {
+                yatayKonum += miktar;
+            }
+        } else if (nesneTipi == Tip.DUSMAN) {
+            if (canDegeri > 0) {
+                yatayKonum -= (miktar / 2);
+            }
+        } else if (nesneTipi == Tip.ESYA) {
+            System.out.println("Esyalar hareket edemez");
+        }
+    }
+
+    public void saldir(OyunNesnesi hedef) {
+        if (nesneTipi == Tip.OYUNCU) {
+            if (hedef.nesneTipi == Tip.DUSMAN) {
+                hedef.canDegeri -= guc;
+            }
+        } else if (nesneTipi == Tip.DUSMAN) {
+            if (hedef.nesneTipi == Tip.OYUNCU) {
+                hedef.canDegeri -= (guc * 2);
+            }
+        } else if (nesneTipi == Tip.ESYA) {
+            System.out.println("Esyalar saldiramaz");
+        }
+    }
+}
