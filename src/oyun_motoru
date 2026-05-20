@@ -1,79 +1,136 @@
+import java.util.ArrayList;
+import java.util.List;
+
+interface Gozlemci {
+    void haberVer(String mesaj);
+}
+
+interface Saldiristratejisi {
+    int hasarHesapla(int temelGuc);
+}
+
+class NormalSaldiri implements Saldiristratejisi {
+    @Override
+    public int hasarHesapla(int temelGuc) {
+        return temelGuc;
+    }
+}
+
+class KritikSaldiri implements Saldiristratejisi {
+    @Override
+    public int hasarHesapla(int temelGuc) {
+        return temelGuc * 2;
+    }
+}
+
+class SihirliSaldiri implements Saldiristratejisi {
+    @Override
+    public int hasarHesapla(int temelGuc) {
+        return temelGuc + 15;
+    }
+}
+
 abstract class OyunNesnesi {
     public String nesneAdi;
     public int canDegeri;
     public int yatayKonum;
     public int dikeyKonum;
     public int guc;
+    protected Saldiristratejisi saldiriStratejisi = new NormalSaldiri();
+    protected List<Gozlemci> gozlemciler = new ArrayList<>();
 
-    public abstract void hareketEt(string yon,int miktar);
-    public abstract void saldir(OyunNesnesi hedef);}
+    public void gozlemciEkle(Gozlemci g) {
+        gozlemciler.add(g);
+    }
 
-    class oyuncu extends OyunNesnesi{
-        public oyuncu(String ad,int can,int x,int y,int kuvvet){
-            this.nesneAdi=ad;
-            this.canDegeri=can;
-            this.yatayKonum=x;
-            this.dikeyKonum=y;
-            this.guc=kuvvet;
-        }
-        @Override
-        public void hareketEt(String yon, int miktar) {
-            if (yon.equals("ileri")) {
-                dikeyKonum += miktar;
-            } else if (yon.equals("sag")) {
-                yatayKonum += miktar;
-            }
-        }
-
-        @Override
-        public void saldir(OyunNesnesi hedef) {
-                hedef.canDegeri -= guc;
-            
+    protected void durumDegisti(String mesaj) {
+        for (Gozlemci g : gozlemciler) {
+            g.haberVer(mesaj);
         }
     }
-    class Dusman extends OyunNesnesi{
-        public Dusman(String ad,int can,int x,int y,int kuvvet){
-            this.nesneAdi=ad;
-            this.canDegeri=can;
-            this.yatayKonum=x;
-            this.dikeyKonum=y;
-            this.guc=kuvvet;
-        }
-        @Override
-        public void hareketEt(String yon, int miktar) {
-            if (canDegeri > 0) {
-                yatayKonum -= (miktar / 2);
-            }
-        }
 
-        @Override
-        public void saldir(OyunNesnesi hedef) {
-                hedef.canDegeri -= (guc * 2);
-            
-        }
+    public void stratejiDegistir(Saldiristratejisi yeniStrateji) {
+        this.saldiriStratejisi = yeniStrateji;
+        durumDegisti(nesneAdi + " saldiri tarzi degisti.");
     }
-    class OyunNesnesiFabrikasi {
+
+    public abstract void hareketEt(String yon, int miktar);
+    public abstract void saldir(OyunNesnesi hedef);
+}
+
+class Oyuncu extends OyunNesnesi {
+    public Oyuncu(String ad, int can, int x, int y, int kuvvet) {
+        this.nesneAdi = ad;
+        this.canDegeri = can;
+        this.yatayKonum = x;
+        this.dikeyKonum = y;
+        this.guc = kuvvet;
+    }
+
+    @Override
+    public void hareketEt(String yon, int miktar) {
+        if (yon.equals("ileri")) dikeyKonum += miktar;
+        else if (yon.equals("sag")) yatayKonum += miktar;
+        durumDegisti(nesneAdi + " yeni yone hareket etti: " + yon);
+    }
+
+    @Override
+    public void saldir(OyunNesnesi hedef) {
+        int netHasar = saldiriStratejisi.hasarHesapla(guc);
+        hedef.canDegeri -= netHasar;
+        durumDegisti(nesneAdi + ", " + hedef.nesneAdi + " nesnesine saldirdi! Verilen Hasar: " + netHasar + " | Dusman Kalan Can: " + hedef.canDegeri);
+    }
+}
+
+class Dusman extends OyunNesnesi {
+    public Dusman(String ad, int can, int x, int y, int kuvvet) {
+        this.nesneAdi = ad;
+        this.canDegeri = can;
+        this.yatayKonum = x;
+        this.dikeyKonum = y;
+        this.guc = kuvvet;
+    }
+
+    @Override
+    public void hareketEt(String yon, int miktar) {
+        if (canDegeri > 0) yatayKonum -= (miktar / 2);
+    }
+
+    @Override
+    public void saldir(OyunNesnesi hedef) {
+        int netHasar = saldiriStratejisi.hasarHesapla(guc);
+        hedef.canDegeri -= netHasar;
+        durumDegisti(nesneAdi + " hamle yapti! Verilen Hasar: " + netHasar);
+    }
+}
+
+class OyunNesnesiFabrikasi {
     public static OyunNesnesi nesneUret(String tip, String ad, int can, int x, int y, int guc) {
         if (tip.equalsIgnoreCase("OYUNCU")) return new Oyuncu(ad, can, x, y, guc);
         else if (tip.equalsIgnoreCase("DUSMAN")) return new Dusman(ad, can, x, y, guc);
         return null;
     }
 }
-    Abstract class  NesneDecorator extends OyunNesnesi {
+
+abstract class NesneDecorator extends OyunNesnesi {
     protected OyunNesnesi sarilanNesne;
+
     public NesneDecorator(OyunNesnesi nesne) {
         this.sarilanNesne = nesne;
         this.nesneAdi = nesne.nesneAdi;
         this.canDegeri = nesne.canDegeri;
         this.guc = nesne.guc;
     }
-    }
-    class KalkanDecorator extends NesneDecorator {
-        public int kalkanGuvenligi = 30;
-        public KalkanDecorator(OyunNesnesi nesne) {
+}
+
+class KalkanDecorator extends NesneDecorator {
+    public int kalkanGuvenligi = 30;
+
+    public KalkanDecorator(OyunNesnesi nesne) {
         super(nesne);
         this.nesneAdi = nesne.nesneAdi + " [Kalkanli]";
     }
+
     @Override
     public void hareketEt(String yon, int miktar) {
         sarilanNesne.hareketEt(yon, miktar);
@@ -84,11 +141,13 @@ abstract class OyunNesnesi {
         sarilanNesne.saldir(hedef);
     }
 }
+
 class DisSesEfektMotoru {
     public void sesCal(String efektIsmi, int sesSeviyesi) {
         System.out.println("Dis Kitaplik Ses Caliyor: " + efektIsmi + " (Vol: " + sesSeviyesi + ")");
     }
 }
+
 interface SesSistemi {
     void efektOynat(String isim);
 }
@@ -105,15 +164,44 @@ class SesAdaptoru implements SesSistemi {
         disMotor.sesCal(isim, 100);
     }
 }
-    public class Main {
-        public static void main(String[] args) {
-            OyunNesnesi kahraman = OyunNesnesiFabrikasi.nesneUret("OYUNCU", "Kahraman Mert", 100, 0, 0, 20);
-            OyunNesnesi zombi = OyunNesnesiFabrikasi.nesneUret("DUSMAN", "Zombi", 60, 10, 10, 8);
-            OyunNesnesi kalkanliKahraman = new KalkanDecorator(kahraman);
-            System.out.println("Yeni Durum: " + kalkanliKahraman.nesneAdi);
-           DisSesEfektMotoru disEskiMotor = new DisSesEfektMotoru();
-        SesSistemi sesSistemi = new SesAdaptoru(disEskiMotor);
-        sesSistemi.efektOynat("saldiri_efekti.mp3");
+
+class BasariTakipcisi implements Gozlemci {
+    @Override
+    public void haberVer(String mesaj) {
+        System.out.println("[BASARI SISTEMI BILDIRIMI]: " + mesaj);
     }
 }
-    
+
+public class oyun_motoru {
+    public static void main(String[] args) {
+        System.out.println("--- OYUN MOTORU GÖNÜL YAPILARI BASLADI ---");
+
+        OyunNesnesi kahraman = OyunNesnesiFabrikasi.nesneUret("OYUNCU", "Kahraman Mert", 100, 0, 0, 20);
+        OyunNesnesi zombi = OyunNesnesiFabrikasi.nesneUret("DUSMAN", "Zombi", 60, 10, 10, 8);
+
+        BasariTakipcisi basariSistemi = new BasariTakipcisi();
+        if (kahraman != null) {
+            kahraman.gozlemciEkle(basariSistemi);
+        }
+
+        OyunNesnesi kalkanliKahraman = new KalkanDecorator(kahraman);
+        System.out.println("Yeni Durum: " + kalkanliKahraman.nesneAdi);
+
+        DisSesEfektMotoru disEskiMotor = new DisSesEfektMotoru();
+        SesSistemi sesSistemi = new SesAdaptoru(disEskiMotor);
+        sesSistemi.efektOynat("saldiri_efekti.mp3");
+
+        System.out.println("\n--- TETIKLENEN DAVRANISSAL OLAYLAR ---");
+        if (kahraman != null && zombi != null) {
+            kahraman.hareketEt("sag", 5);
+            
+            kahraman.saldir(zombi);
+            
+            kahraman.stratejiDegistir(new KritikSaldiri());
+            kahraman.saldir(zombi);
+
+            kahraman.stratejiDegistir(new SihirliSaldiri());
+            kahraman.saldir(zombi);
+        }
+    }
+}
