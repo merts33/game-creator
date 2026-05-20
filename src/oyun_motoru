@@ -1,49 +1,74 @@
-public class OyunNesnesi {
-    public enum Tip { OYUNCU, DUSMAN, ESYA }
-
+abstract class OyunNesnesi {
     public String nesneAdi;
-    public Tip nesneTipi;
     public int canDegeri;
     public int yatayKonum;
     public int dikeyKonum;
     public int guc;
 
-    public OyunNesnesi(String ad, Tip tip, int can, int x, int y, int kuvvet) {
-        this.nesneAdi = ad;
-        this.nesneTipi = tip;
-        this.canDegeri = can;
-        this.yatayKonum = x;
-        this.dikeyKonum = y;
-        this.guc = kuvvet;
-    }
-
-    public void hareketEt(String yon, int miktar) {
-        if (nesneTipi == Tip.OYUNCU) {
+    public abstract void hareketEt(string yon,int miktar);
+    public abstract void saldir(OyunNesnesi hedef);}
+    class oyuncu extends OyunNesnesi{
+        public oyuncu(String ad,int can,int x,int y,int kuvvet){
+            this.nesneAdi=ad;
+            this.canDegeri=can;
+            this.yatayKonum=x;
+            this.dikeyKonum=y;
+            this.guc=kuvvet;
+        }
+        @Override
+        public void hareketEt(String yon, int miktar) {
             if (yon.equals("ileri")) {
                 dikeyKonum += miktar;
             } else if (yon.equals("sag")) {
                 yatayKonum += miktar;
             }
-        } else if (nesneTipi == Tip.DUSMAN) {
-            if (canDegeri > 0) {
-                yatayKonum -= (miktar / 2);
-            }
-        } else if (nesneTipi == Tip.ESYA) {
-            System.out.println("Esyalar hareket edemez");
         }
-    }
 
-    public void saldir(OyunNesnesi hedef) {
-        if (nesneTipi == Tip.OYUNCU) {
+        @Override
+        public void saldir(OyunNesnesi hedef) {
             if (hedef.nesneTipi == Tip.DUSMAN) {
                 hedef.canDegeri -= guc;
             }
-        } else if (nesneTipi == Tip.DUSMAN) {
+        }
+    }
+    class Dusman extends OyunNesnesi{
+        public Dusman(String ad,int can,int x,int y,int kuvvet){
+            this.nesneAdi=ad;
+            this.canDegeri=can;
+            this.yatayKonum=x;
+            this.dikeyKonum=y;
+            this.guc=kuvvet;
+        }
+        @Override
+        public void hareketEt(String yon, int miktar) {
+            if (canDegeri > 0) {
+                yatayKonum -= (miktar / 2);
+            }
+        }
+
+        @Override
+        public void saldir(OyunNesnesi hedef) {
             if (hedef.nesneTipi == Tip.OYUNCU) {
                 hedef.canDegeri -= (guc * 2);
             }
-        } else if (nesneTipi == Tip.ESYA) {
-            System.out.println("Esyalar saldiramaz");
         }
     }
-}
+    class OyunNesnesiFabrikasi{
+        public static Oyun Nesnesi nesneUret(String tip, String ad, int can, int x, int y, int guc) {
+         if(tip.equalsIgnoreCase("OYUNCU")){
+            return new Oyuncu(ad,can,x,y,guc)
+         }   
+         else if(tip.equalsIgnoreCase("DUSMAN")){
+            return new Dusman(ad,can,x,y,guc)
+         }
+         return null;
+    }
+
+    public class Main {
+        public static void main(String[] args) {
+            OyunNesnesi oyuncu1 = OyunNesnesiFabrikasi.nesneUret("OYUNCU","Kahraman",100,0,0,20);
+            OyunNesnesi zombi = OyunNesnesiFabrikasi.nesneUret("DUSMAN","zombi",60,10,10,8);
+            if (kahraman != null && zombi != null) {
+                kahraman.hareketEt("ileri", 5);
+                kahraman .saldir(zombi);
+    }
