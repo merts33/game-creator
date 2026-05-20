@@ -127,3 +127,14 @@ classDiagram
     Main ..> SesSistemi
     Main ..> KalkanDecorator
 
+## Faz 3: Behavioral (Davranışsal) Örüntüler
+
+### 1. Observer (Gözlemci) Örüntüsü
+* **Nerede Kullanıldı:** `Gozlemci` arayüzü ve oyuncunun hareket/saldırı loglarını dinleyen `BasariTakipcisi` sınıfında kullanıldı.
+* **Neden Seçildi:** Nesnelerin anlık durum değişimlerini, sınıfları birbirine bağımlı kılmadan merkezi sistemlere raporlamak için seçildi.
+* **Ne Kazandınız:** Nesneler arası gevşek bağlılık (Loose Coupling) sağlandı.
+
+### 2. Strategy (Strateji) Örüntüsü
+* **Nerede Kullanıldı:** `Saldiristratejisi` interface'i ve ondan türeyen `NormalSaldiri`, `KritikSaldiri`, `SihirliSaldiri` sınıfları aracılığıyla karakterlerin dövüş mekanizmasında kullanıldı.
+* **Neden Seçildi:** Karakterlerin saldırı algoritmalarını dinamik olarak değiştirebilmek ve kodun genişlemeye açık olmasını sağlamak için seçildi.
+* **Ne Kazandım (OCP İspatı):** **Açık/Kapalı Prensibine (OCP)** tam uyum sağlandı. İleride oyuna "Zehirli Saldırı" adında 4. bir dövüş tarzı eklemek istediğimizde, mevcut `Oyuncu` veya `Dusman` kodlarında tek bir satırı bile değiştirmeden sadece yeni bir strateji sınıfı yazarak sisteme entegre edebiliyoruz.
