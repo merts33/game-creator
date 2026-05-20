@@ -7,6 +7,7 @@ abstract class OyunNesnesi {
 
     public abstract void hareketEt(string yon,int miktar);
     public abstract void saldir(OyunNesnesi hedef);}
+
     class oyuncu extends OyunNesnesi{
         public oyuncu(String ad,int can,int x,int y,int kuvvet){
             this.nesneAdi=ad;
@@ -26,9 +27,8 @@ abstract class OyunNesnesi {
 
         @Override
         public void saldir(OyunNesnesi hedef) {
-            if (hedef.nesneTipi == Tip.DUSMAN) {
                 hedef.canDegeri -= guc;
-            }
+            
         }
     }
     class Dusman extends OyunNesnesi{
@@ -48,27 +48,72 @@ abstract class OyunNesnesi {
 
         @Override
         public void saldir(OyunNesnesi hedef) {
-            if (hedef.nesneTipi == Tip.OYUNCU) {
                 hedef.canDegeri -= (guc * 2);
-            }
+            
         }
     }
-    class OyunNesnesiFabrikasi{
-        public static Oyun Nesnesi nesneUret(String tip, String ad, int can, int x, int y, int guc) {
-         if(tip.equalsIgnoreCase("OYUNCU")){
-            return new Oyuncu(ad,can,x,y,guc)
-         }   
-         else if(tip.equalsIgnoreCase("DUSMAN")){
-            return new Dusman(ad,can,x,y,guc)
-         }
-         return null;
+    class OyunNesnesiFabrikasi {
+    public static OyunNesnesi nesneUret(String tip, String ad, int can, int x, int y, int guc) {
+        if (tip.equalsIgnoreCase("OYUNCU")) return new Oyuncu(ad, can, x, y, guc);
+        else if (tip.equalsIgnoreCase("DUSMAN")) return new Dusman(ad, can, x, y, guc);
+        return null;
+    }
+}
+    Abstract class  NesneDecorator extends OyunNesnesi {
+    protected OyunNesnesi sarilanNesne;
+    public NesneDecorator(OyunNesnesi nesne) {
+        this.sarilanNesne = nesne;
+        this.nesneAdi = nesne.nesneAdi;
+        this.canDegeri = nesne.canDegeri;
+        this.guc = nesne.guc;
+    }
+    }
+    class KalkanDecorator extends NesneDecorator {
+        public int kalkanGuvenligi = 30;
+        public KalkanDecorator(OyunNesnesi nesne) {
+        super(nesne);
+        this.nesneAdi = nesne.nesneAdi + " [Kalkanli]";
+    }
+    @Override
+    public void hareketEt(String yon, int miktar) {
+        sarilanNesne.hareketEt(yon, miktar);
     }
 
+    @Override
+    public void saldir(OyunNesnesi hedef) {
+        sarilanNesne.saldir(hedef);
+    }
+}
+class DisSesEfektMotoru {
+    public void sesCal(String efektIsmi, int sesSeviyesi) {
+        System.out.println("Dis Kitaplik Ses Caliyor: " + efektIsmi + " (Vol: " + sesSeviyesi + ")");
+    }
+}
+interface SesSistemi {
+    void efektOynat(String isim);
+}
+
+class SesAdaptoru implements SesSistemi {
+    private DisSesEfektMotoru disMotor;
+
+    public SesAdaptoru(DisSesEfektMotoru motor) {
+        this.disMotor = motor;
+    }
+
+    @Override
+    public void efektOynat(String isim) {
+        disMotor.sesCal(isim, 100);
+    }
+}
     public class Main {
         public static void main(String[] args) {
-            OyunNesnesi oyuncu1 = OyunNesnesiFabrikasi.nesneUret("OYUNCU","Kahraman",100,0,0,20);
-            OyunNesnesi zombi = OyunNesnesiFabrikasi.nesneUret("DUSMAN","zombi",60,10,10,8);
-            if (kahraman != null && zombi != null) {
-                kahraman.hareketEt("ileri", 5);
-                kahraman .saldir(zombi);
+            OyunNesnesi kahraman = OyunNesnesiFabrikasi.nesneUret("OYUNCU", "Kahraman Mert", 100, 0, 0, 20);
+            OyunNesnesi zombi = OyunNesnesiFabrikasi.nesneUret("DUSMAN", "Zombi", 60, 10, 10, 8);
+            OyunNesnesi kalkanliKahraman = new KalkanDecorator(kahraman);
+            System.out.println("Yeni Durum: " + kalkanliKahraman.nesneAdi);
+           DisSesEfektMotoru disEskiMotor = new DisSesEfektMotoru();
+        SesSistemi sesSistemi = new SesAdaptoru(disEskiMotor);
+        sesSistemi.efektOynat("saldiri_efekti.mp3");
     }
+}
+    
